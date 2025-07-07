@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Package, Store, Users, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react';
 import { productsService, storesService, authService, stockService } from '../../services/api';
+import { normalizeApiResponse } from '../../config/api';
 import { Produit, Stock, Magasin, User } from '../../types';
 
 export const AdminDashboard: React.FC = () => {
@@ -22,29 +23,30 @@ export const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       // Récupérer toutes les données en parallèle
-      const [produitsData, magasinsData, utilisateursData, stocksData] = await Promise.all([
+      const [produitsResponse, magasinsResponse, utilisateursResponse, stocksResponse] = await Promise.all([
         productsService.getProducts(),
         storesService.getStores(),
         authService.getUsers(),
         stockService.getStocks()
       ]);
 
-      const produits = produitsData.map((item: any) => ({
+      // Normaliser toutes les réponses
+      const produits = normalizeApiResponse(produitsResponse).map((item: any) => ({
         ...item,
         createdAt: new Date(item.created_at)
       })) as Produit[];
 
-      const magasins = magasinsData.map((item: any) => ({
+      const magasins = normalizeApiResponse(magasinsResponse).map((item: any) => ({
         ...item,
         createdAt: new Date(item.created_at)
       })) as Magasin[];
 
-      const utilisateurs = utilisateursData.map((item: any) => ({
+      const utilisateurs = normalizeApiResponse(utilisateursResponse).map((item: any) => ({
         ...item,
-        createdAt: new Date(item.date_joined)
+        createdAt: new Date(item.date_joined || item.created_at)
       })) as User[];
 
-      const stocks = stocksData.map((item: any) => ({
+      const stocks = normalizeApiResponse(stocksResponse).map((item: any) => ({
         ...item,
         updatedAt: new Date(item.updated_at)
       })) as Stock[];

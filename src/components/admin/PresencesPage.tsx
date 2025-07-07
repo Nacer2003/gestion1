@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, User, Filter, Download, AlertCircle, Coffee, LogOut, LogIn, FileText } from 'lucide-react';
 import { attendanceService, authService, storesService } from '../../services/api';
+import { normalizeApiResponse } from '../../config/api';
 import { Presence, User as UserType, Magasin } from '../../types';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -25,9 +26,10 @@ export const PresencesPage: React.FC = () => {
     try {
       // Récupérer les utilisateurs
       const usersData = await authService.getUsers();
-      setUsers(usersData.map((item: any) => ({
+      const normalizedUsers = normalizeApiResponse(usersData);
+      setUsers(normalizedUsers.map((item: any) => ({
         ...item,
-        createdAt: new Date(item.date_joined)
+        createdAt: new Date(item.date_joined || item.created_at)
       })));
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
@@ -39,7 +41,8 @@ export const PresencesPage: React.FC = () => {
     setLoading(true);
     try {
       const data = await attendanceService.getAttendance();
-      let presencesData = data.map((item: any) => ({
+      const normalizedData = normalizeApiResponse(data);
+      let presencesData = normalizedData.map((item: any) => ({
         ...item,
         date_pointage: new Date(item.date_pointage),
         heure_entree: item.heure_entree ? new Date(item.heure_entree) : null,

@@ -1,4 +1,4 @@
-import { apiRequest, apiUpload, endpoints } from '../config/api';
+import { apiRequest, endpoints, normalizeApiResponse } from '../config/api';
 
 // Auth Services
 export const authService = {
@@ -16,7 +16,10 @@ export const authService = {
   
   getCurrentUser: () => apiRequest(endpoints.currentUser),
   
-  getUsers: () => apiRequest(endpoints.users),
+  getUsers: async () => {
+    const response = await apiRequest(endpoints.users);
+    return normalizeApiResponse(response);
+  },
   
   createUser: (userData: any) => {
     // Créer FormData pour l'upload
@@ -85,7 +88,10 @@ export const authService = {
 
 // Products Services
 export const productsService = {
-  getProducts: () => apiRequest(endpoints.products),
+  getProducts: async () => {
+    const response = await apiRequest(endpoints.products);
+    return normalizeApiResponse(response);
+  },
   
   createProduct: (productData: any) => {
     const formData = new FormData();
@@ -157,7 +163,10 @@ export const productsService = {
 
 // Stores Services
 export const storesService = {
-  getStores: () => apiRequest(endpoints.stores),
+  getStores: async () => {
+    const response = await apiRequest(endpoints.stores);
+    return normalizeApiResponse(response);
+  },
   
   createStore: (storeData: any) => {
     const formData = new FormData();
@@ -219,7 +228,10 @@ export const storesService = {
 
 // Suppliers Services
 export const suppliersService = {
-  getSuppliers: () => apiRequest(endpoints.suppliers),
+  getSuppliers: async () => {
+    const response = await apiRequest(endpoints.suppliers);
+    return normalizeApiResponse(response);
+  },
   
   createSupplier: (supplierData: any) => {
     const formData = new FormData();
@@ -279,7 +291,10 @@ export const suppliersService = {
 
 // Stock Services
 export const stockService = {
-  getStocks: () => apiRequest(endpoints.stocks),
+  getStocks: async () => {
+    const response = await apiRequest(endpoints.stocks);
+    return normalizeApiResponse(response);
+  },
   
   createStock: (stockData: any) =>
     apiRequest(endpoints.stocks, {
@@ -296,7 +311,10 @@ export const stockService = {
   deleteStock: (id: string) =>
     apiRequest(`${endpoints.stocks}${id}/`, { method: 'DELETE' }),
   
-  getMovements: () => apiRequest(endpoints.movements),
+  getMovements: async () => {
+    const response = await apiRequest(endpoints.movements);
+    return normalizeApiResponse(response);
+  },
   
   createMovement: (movementData: any) =>
     apiRequest(endpoints.movements, {
@@ -307,7 +325,10 @@ export const stockService = {
 
 // Attendance Services
 export const attendanceService = {
-  getAttendance: () => apiRequest(endpoints.attendance),
+  getAttendance: async () => {
+    const response = await apiRequest(endpoints.attendance);
+    return normalizeApiResponse(response);
+  },
   
   createAttendance: (attendanceData: any) =>
     apiRequest(endpoints.attendance, {
@@ -327,7 +348,10 @@ export const attendanceService = {
 
 // Messaging Services
 export const messagingService = {
-  getMessages: () => apiRequest(endpoints.messages),
+  getMessages: async () => {
+    const response = await apiRequest(endpoints.messages);
+    return normalizeApiResponse(response);
+  },
   
   createMessage: (messageData: any) =>
     apiRequest(endpoints.messages, {

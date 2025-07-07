@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Users, Shield, User, Save, X, AlertTriangle } from 'lucide-react';
 import { authService, storesService } from '../../services/api';
+import { normalizeApiResponse } from '../../config/api';
 import { User as UserType, Magasin } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { ImageUpload } from '../ImageUpload';
@@ -32,7 +33,8 @@ export const UtilisateursPage: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const data = await authService.getUsers();
-      setUsers(data.map((item: any) => ({
+      const normalizedData = normalizeApiResponse(data);
+      setUsers(normalizedData.map((item: any) => ({
         ...item,
         createdAt: new Date(item.date_joined || item.created_at)
       })));
@@ -47,7 +49,8 @@ export const UtilisateursPage: React.FC = () => {
   const fetchMagasins = async () => {
     try {
       const data = await storesService.getStores();
-      setMagasins(data.map((item: any) => ({
+      const normalizedData = normalizeApiResponse(data);
+      setMagasins(normalizedData.map((item: any) => ({
         ...item,
         createdAt: new Date(item.created_at)
       })));
@@ -101,7 +104,7 @@ export const UtilisateursPage: React.FC = () => {
       }
 
       resetForm();
-      fetchUsers();
+      await fetchUsers();
     } catch (error: any) {
       console.error('Erreur lors de la sauvegarde:', error);
       if (error.message.includes('email') || error.message.includes('unique')) {
@@ -134,7 +137,7 @@ export const UtilisateursPage: React.FC = () => {
     try {
       await authService.deleteUser(user.id);
       toast.success('Utilisateur supprimé avec succès');
-      fetchUsers();
+      await fetchUsers();
     } catch (error) {
       toast.error('Erreur lors de la suppression');
     }
@@ -154,11 +157,11 @@ export const UtilisateursPage: React.FC = () => {
     setShowModal(false);
   };
 
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = Array.isArray(users) ? users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (user.nom && user.nom.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (user.prenom && user.prenom.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  ) : [];
 
   if (loading && users.length === 0) {
     return (

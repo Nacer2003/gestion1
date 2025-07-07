@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Package, TrendingUp, TrendingDown, X, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { stockService, productsService, storesService, authService } from '../services/api';
+import { normalizeApiResponse } from '../config/api';
 import { Mouvement, Produit, Magasin, User } from '../types';
 
 interface Notification {
@@ -50,21 +51,27 @@ export const NotificationWidget: React.FC = () => {
           stockService.getMovements()
         ]);
 
-        setProduits(produitsData.map((item: any) => ({ ...item, createdAt: new Date(item.created_at) })) as Produit[]);
-        setMagasins(magasinsData.map((item: any) => ({ ...item, createdAt: new Date(item.created_at) })) as Magasin[]);
-        setUsers(usersData.map((item: any) => ({ ...item, createdAt: new Date(item.date_joined) })) as User[]);
+        // Normaliser toutes les réponses
+        const normalizedProduits = normalizeApiResponse(produitsData);
+        const normalizedMagasins = normalizeApiResponse(magasinsData);
+        const normalizedUsers = normalizeApiResponse(usersData);
+        const normalizedMouvements = normalizeApiResponse(mouvementsData);
+
+        setProduits(normalizedProduits.map((item: any) => ({ ...item, createdAt: new Date(item.created_at) })) as Produit[]);
+        setMagasins(normalizedMagasins.map((item: any) => ({ ...item, createdAt: new Date(item.created_at) })) as Magasin[]);
+        setUsers(normalizedUsers.map((item: any) => ({ ...item, createdAt: new Date(item.date_joined || item.created_at) })) as User[]);
 
         // Traiter les mouvements récents
         const newNotifications: Notification[] = [];
-        const recentMovements = mouvementsData
+        const recentMovements = normalizedMouvements
           .map((item: any) => ({ ...item, date: new Date(item.date) }))
           .sort((a: any, b: any) => b.date.getTime() - a.date.getTime())
           .slice(0, 20);
 
         recentMovements.forEach((mouvement: any) => {
-          const produit = produitsData.find((p: any) => p.id === mouvement.product);
-          const magasin = magasinsData.find((m: any) => m.id === mouvement.store);
-          const userMouvement = usersData.find((u: any) => u.id === mouvement.user);
+          const produit = normalizedProduits.find((p: any) => p.id === mouvement.product);
+          const magasin = normalizedMagasins.find((m: any) => m.id === mouvement.store);
+          const userMouvement = normalizedUsers.find((u: any) => u.id === mouvement.user);
 
           if (produit && magasin && userMouvement) {
             newNotifications.push({

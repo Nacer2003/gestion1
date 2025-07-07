@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Package, AlertTriangle, Save, X } from 'lucide-react';
 import { productsService, suppliersService } from '../../services/api';
+import { normalizeApiResponse } from '../../config/api';
 import { Produit, Fournisseur } from '../../types';
 import { ImageUpload } from '../ImageUpload';
 import toast from 'react-hot-toast';
@@ -32,7 +33,9 @@ export const ProduitsPage: React.FC = () => {
       console.log('Chargement des produits...');
       const data = await productsService.getProducts();
       console.log('Produits reçus:', data);
-      setProduits(data.map((item: any) => ({
+      
+      const normalizedData = normalizeApiResponse(data);
+      setProduits(normalizedData.map((item: any) => ({
         ...item,
         createdAt: new Date(item.created_at)
       })));
@@ -47,7 +50,8 @@ export const ProduitsPage: React.FC = () => {
   const fetchFournisseurs = async () => {
     try {
       const data = await suppliersService.getSuppliers();
-      setFournisseurs(data.map((item: any) => ({
+      const normalizedData = normalizeApiResponse(data);
+      setFournisseurs(normalizedData.map((item: any) => ({
         ...item,
         createdAt: new Date(item.created_at)
       })));
@@ -131,11 +135,11 @@ export const ProduitsPage: React.FC = () => {
     setShowModal(false);
   };
 
-  const filteredProduits = produits.filter(produit =>
+  const filteredProduits = Array.isArray(produits) ? produits.filter(produit =>
     produit.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
     produit.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
     produit.categorie.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   if (loading && produits.length === 0) {
     return (

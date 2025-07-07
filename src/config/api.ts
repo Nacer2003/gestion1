@@ -6,6 +6,33 @@ export const apiConfig = {
   timeout: 10000,
 };
 
+// Fonction utilitaire pour normaliser les réponses API
+export const normalizeApiResponse = (response: any): any[] => {
+  // Si c'est déjà un tableau, le retourner tel quel
+  if (Array.isArray(response)) {
+    return response;
+  }
+  
+  // Si c'est une réponse paginée Django avec 'results'
+  if (response && typeof response === 'object' && Array.isArray(response.results)) {
+    return response.results;
+  }
+  
+  // Si c'est un objet avec une propriété 'data' qui est un tableau
+  if (response && typeof response === 'object' && Array.isArray(response.data)) {
+    return response.data;
+  }
+  
+  // Si c'est un objet unique, le mettre dans un tableau
+  if (response && typeof response === 'object') {
+    return [response];
+  }
+  
+  // Par défaut, retourner un tableau vide
+  console.warn('Réponse API inattendue, retour d\'un tableau vide:', response);
+  return [];
+};
+
 // Helper pour les requêtes authentifiées
 const getAuthHeaders = (): Record<string, string> => {
   const token = localStorage.getItem('access_token');

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, X, Users, Bell, Bot } from 'lucide-react';
 import { messagingService, authService } from '../services/api';
+import { normalizeApiResponse } from '../config/api';
 import { useAuth } from '../hooks/useAuth';
 import { Message, User } from '../types';
 import { ChatBot } from './ChatBot';
@@ -35,11 +36,12 @@ export const MessagingWidget: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const usersData = await authService.getUsers();
-      const filteredUsers = usersData
+      const normalizedUsers = normalizeApiResponse(usersData);
+      const filteredUsers = normalizedUsers
         .filter((u: any) => u.id !== user?.id)
         .map((item: any) => ({
           ...item,
-          createdAt: new Date(item.date_joined)
+          createdAt: new Date(item.date_joined || item.created_at)
         }));
 
       if (user?.role === 'admin') {
@@ -55,7 +57,8 @@ export const MessagingWidget: React.FC = () => {
   const fetchMessages = async () => {
     try {
       const messagesData = await messagingService.getMessages();
-      const formattedMessages = messagesData.map((item: any) => ({
+      const normalizedMessages = normalizeApiResponse(messagesData);
+      const formattedMessages = normalizedMessages.map((item: any) => ({
         ...item,
         timestamp: new Date(item.timestamp)
       })) as Message[];
