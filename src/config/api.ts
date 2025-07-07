@@ -12,12 +12,6 @@ const getAuthHeaders = (): Record<string, string> => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-// Helper pour les requêtes avec fichiers
-const getFormDataHeaders = () => ({
-  ...getAuthHeaders(),
-  // Ne pas définir Content-Type pour FormData, le navigateur le fera automatiquement
-});
-
 // Helper pour les requêtes JSON
 const getJsonHeaders = () => ({
   ...getAuthHeaders(),
@@ -96,7 +90,8 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
+      console.error('Erreur API:', errorData);
+      throw new Error(errorData.error || errorData.message || errorData.detail || `Erreur HTTP: ${response.status}`);
     }
     
     const contentType = response.headers.get('content-type');
@@ -107,61 +102,6 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
     return response;
   } catch (error) {
     console.error('Erreur API:', error);
-    throw error;
-  }
-};
-
-// Fonction pour les uploads de fichiers
-export const apiUpload = async (endpoint: string, formData: FormData) => {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const makeRequest = async (headers: Record<string, string>) => {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-    
-    if (response.status === 401) {
-      const newToken = await refreshToken();
-      if (newToken) {
-        const newHeaders = { ...headers, Authorization: `Bearer ${newToken}` };
-        const retryResponse = await fetch(url, {
-          method: 'POST',
-          headers: newHeaders,
-          body: formData,
-        });
-        
-        if (retryResponse.status === 401) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
-          throw new Error('Session expirée');
-        }
-        
-        return retryResponse;
-      } else {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
-        throw new Error('Session expirée');
-      }
-    }
-    
-    return response;
-  };
-
-  try {
-    const response = await makeRequest(getAuthHeaders());
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Erreur upload:', error);
     throw error;
   }
 };

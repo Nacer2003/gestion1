@@ -55,7 +55,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         })
 
 class UserListCreateView(generics.ListCreateAPIView):
-    queryset = User.objects.all().order_by('-created_at')
+    queryset = User.objects.all().order_by('-date_joined')
     permission_classes = [permissions.IsAuthenticated]
     
     def get_serializer_class(self):
@@ -63,20 +63,51 @@ class UserListCreateView(generics.ListCreateAPIView):
             return UserCreateSerializer
         return UserSerializer
     
-    def perform_create(self, serializer):
-        logger.info(f"Création d'utilisateur: {serializer.validated_data.get('email')}")
+    def create(self, request, *args, **kwargs):
+        logger.info(f"Création d'utilisateur: {request.data.get('email')}")
+        
         try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
             with transaction.atomic():
                 user = serializer.save()
                 logger.info(f"Utilisateur créé avec succès: {user.email}")
+                
+                return Response(
+                    UserSerializer(user).data,
+                    status=status.HTTP_201_CREATED
+                )
+                
         except Exception as e:
             logger.error(f"Erreur lors de la création d'utilisateur: {str(e)}")
-            raise
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def update(self, request, *args, **kwargs):
+        try:
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            
+            with transaction.atomic():
+                user = serializer.save()
+                logger.info(f"Utilisateur modifié avec succès: {user.email}")
+                
+                return Response(UserSerializer(user).data)
+                
+        except Exception as e:
+            logger.error(f"Erreur lors de la modification d'utilisateur: {str(e)}")
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])

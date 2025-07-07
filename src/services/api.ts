@@ -19,31 +19,64 @@ export const authService = {
   getUsers: () => apiRequest(endpoints.users),
   
   createUser: (userData: any) => {
-    if (userData instanceof FormData) {
-      return apiUpload(endpoints.users, userData);
+    // Créer FormData pour l'upload
+    const formData = new FormData();
+    
+    // Ajouter les champs requis
+    formData.append('email', userData.email);
+    formData.append('nom', userData.nom);
+    formData.append('prenom', userData.prenom);
+    formData.append('password', userData.password);
+    formData.append('role', userData.role);
+    
+    // Ajouter le magasin si fourni
+    if (userData.magasin) {
+      formData.append('magasin', userData.magasin);
     }
     
-    const formData = new FormData();
-    Object.keys(userData).forEach(key => {
-      if (userData[key] !== null && userData[key] !== undefined) {
-        formData.append(key, userData[key]);
+    // Ajouter l'image si fournie
+    if (userData.image) {
+      formData.append('image', userData.image);
+    }
+    
+    return fetch(`http://localhost:8000/api/auth/users/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      },
+      body: formData,
+    }).then(async response => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
       }
+      return response.json();
     });
-    return apiUpload(endpoints.users, formData);
   },
   
   updateUser: (id: string, userData: any) => {
-    if (userData instanceof FormData) {
-      return apiUpload(`${endpoints.users}${id}/`, userData);
-    }
-    
     const formData = new FormData();
-    Object.keys(userData).forEach(key => {
-      if (userData[key] !== null && userData[key] !== undefined) {
-        formData.append(key, userData[key]);
+    
+    // Ajouter les champs modifiables
+    if (userData.nom) formData.append('nom', userData.nom);
+    if (userData.prenom) formData.append('prenom', userData.prenom);
+    if (userData.role) formData.append('role', userData.role);
+    if (userData.magasin) formData.append('magasin', userData.magasin);
+    if (userData.image) formData.append('image', userData.image);
+    
+    return fetch(`http://localhost:8000/api/auth/users/${id}/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      },
+      body: formData,
+    }).then(async response => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
       }
+      return response.json();
     });
-    return apiUpload(`${endpoints.users}${id}/`, formData);
   },
   
   deleteUser: (id: string) =>
@@ -55,31 +88,67 @@ export const productsService = {
   getProducts: () => apiRequest(endpoints.products),
   
   createProduct: (productData: any) => {
-    if (productData instanceof FormData) {
-      return apiUpload(endpoints.products, productData);
+    const formData = new FormData();
+    
+    formData.append('nom', productData.nom);
+    formData.append('reference', productData.reference);
+    formData.append('categorie', productData.categorie);
+    formData.append('prix_unitaire', productData.prix_unitaire.toString());
+    formData.append('seuil_alerte', productData.seuil_alerte.toString());
+    
+    if (productData.fournisseur) {
+      formData.append('fournisseur', productData.fournisseur);
     }
     
-    const formData = new FormData();
-    Object.keys(productData).forEach(key => {
-      if (productData[key] !== null && productData[key] !== undefined) {
-        formData.append(key, productData[key]);
+    if (productData.image) {
+      formData.append('image', productData.image);
+    }
+    
+    return fetch(`http://localhost:8000/api/products/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      },
+      body: formData,
+    }).then(async response => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
       }
+      return response.json();
     });
-    return apiUpload(endpoints.products, formData);
   },
   
   updateProduct: (id: string, productData: any) => {
-    if (productData instanceof FormData) {
-      return apiUpload(`${endpoints.products}${id}/`, productData);
+    const formData = new FormData();
+    
+    formData.append('nom', productData.nom);
+    formData.append('reference', productData.reference);
+    formData.append('categorie', productData.categorie);
+    formData.append('prix_unitaire', productData.prix_unitaire.toString());
+    formData.append('seuil_alerte', productData.seuil_alerte.toString());
+    
+    if (productData.fournisseur) {
+      formData.append('fournisseur', productData.fournisseur);
     }
     
-    const formData = new FormData();
-    Object.keys(productData).forEach(key => {
-      if (productData[key] !== null && productData[key] !== undefined) {
-        formData.append(key, productData[key]);
+    if (productData.image) {
+      formData.append('image', productData.image);
+    }
+    
+    return fetch(`http://localhost:8000/api/products/${id}/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      },
+      body: formData,
+    }).then(async response => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
       }
+      return response.json();
     });
-    return apiUpload(`${endpoints.products}${id}/`, formData);
   },
   
   deleteProduct: (id: string) =>
@@ -91,31 +160,57 @@ export const storesService = {
   getStores: () => apiRequest(endpoints.stores),
   
   createStore: (storeData: any) => {
-    if (storeData instanceof FormData) {
-      return apiUpload(endpoints.stores, storeData);
+    const formData = new FormData();
+    
+    formData.append('nom', storeData.nom);
+    formData.append('adresse', storeData.adresse);
+    formData.append('latitude', storeData.latitude.toString());
+    formData.append('longitude', storeData.longitude.toString());
+    
+    if (storeData.image) {
+      formData.append('image', storeData.image);
     }
     
-    const formData = new FormData();
-    Object.keys(storeData).forEach(key => {
-      if (storeData[key] !== null && storeData[key] !== undefined) {
-        formData.append(key, storeData[key]);
+    return fetch(`http://localhost:8000/api/stores/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      },
+      body: formData,
+    }).then(async response => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
       }
+      return response.json();
     });
-    return apiUpload(endpoints.stores, formData);
   },
   
   updateStore: (id: string, storeData: any) => {
-    if (storeData instanceof FormData) {
-      return apiUpload(`${endpoints.stores}${id}/`, storeData);
+    const formData = new FormData();
+    
+    formData.append('nom', storeData.nom);
+    formData.append('adresse', storeData.adresse);
+    formData.append('latitude', storeData.latitude.toString());
+    formData.append('longitude', storeData.longitude.toString());
+    
+    if (storeData.image) {
+      formData.append('image', storeData.image);
     }
     
-    const formData = new FormData();
-    Object.keys(storeData).forEach(key => {
-      if (storeData[key] !== null && storeData[key] !== undefined) {
-        formData.append(key, storeData[key]);
+    return fetch(`http://localhost:8000/api/stores/${id}/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      },
+      body: formData,
+    }).then(async response => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
       }
+      return response.json();
     });
-    return apiUpload(`${endpoints.stores}${id}/`, storeData);
   },
   
   deleteStore: (id: string) =>
@@ -127,31 +222,55 @@ export const suppliersService = {
   getSuppliers: () => apiRequest(endpoints.suppliers),
   
   createSupplier: (supplierData: any) => {
-    if (supplierData instanceof FormData) {
-      return apiUpload(endpoints.suppliers, supplierData);
+    const formData = new FormData();
+    
+    formData.append('nom', supplierData.nom);
+    formData.append('adresse', supplierData.adresse);
+    formData.append('contact', supplierData.contact);
+    
+    if (supplierData.image) {
+      formData.append('image', supplierData.image);
     }
     
-    const formData = new FormData();
-    Object.keys(supplierData).forEach(key => {
-      if (supplierData[key] !== null && supplierData[key] !== undefined) {
-        formData.append(key, supplierData[key]);
+    return fetch(`http://localhost:8000/api/suppliers/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      },
+      body: formData,
+    }).then(async response => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
       }
+      return response.json();
     });
-    return apiUpload(endpoints.suppliers, formData);
   },
   
   updateSupplier: (id: string, supplierData: any) => {
-    if (supplierData instanceof FormData) {
-      return apiUpload(`${endpoints.suppliers}${id}/`, supplierData);
+    const formData = new FormData();
+    
+    formData.append('nom', supplierData.nom);
+    formData.append('adresse', supplierData.adresse);
+    formData.append('contact', supplierData.contact);
+    
+    if (supplierData.image) {
+      formData.append('image', supplierData.image);
     }
     
-    const formData = new FormData();
-    Object.keys(supplierData).forEach(key => {
-      if (supplierData[key] !== null && supplierData[key] !== undefined) {
-        formData.append(key, supplierData[key]);
+    return fetch(`http://localhost:8000/api/suppliers/${id}/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      },
+      body: formData,
+    }).then(async response => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Erreur HTTP: ${response.status}`);
       }
+      return response.json();
     });
-    return apiUpload(`${endpoints.suppliers}${id}/`, supplierData);
   },
   
   deleteSupplier: (id: string) =>

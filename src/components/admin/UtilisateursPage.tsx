@@ -34,9 +34,10 @@ export const UtilisateursPage: React.FC = () => {
       const data = await authService.getUsers();
       setUsers(data.map((item: any) => ({
         ...item,
-        createdAt: new Date(item.date_joined)
+        createdAt: new Date(item.date_joined || item.created_at)
       })));
     } catch (error) {
+      console.error('Erreur lors du chargement des utilisateurs:', error);
       toast.error('Erreur lors du chargement des utilisateurs');
     } finally {
       setLoading(false);
@@ -60,23 +61,23 @@ export const UtilisateursPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const userData = new FormData();
-      userData.append('email', formData.email);
-      userData.append('nom', formData.nom);
-      userData.append('prenom', formData.prenom);
-      userData.append('role', formData.role);
-      
-      if (formData.magasin) {
-        userData.append('magasin', formData.magasin);
-      }
-      
-      if (formData.image) {
-        userData.append('image', formData.image);
-      }
-
       if (editingUser) {
         // Modification d'un utilisateur existant
-        await authService.updateUser(editingUser.id, userData);
+        const updateData: any = {
+          nom: formData.nom,
+          prenom: formData.prenom,
+          role: formData.role,
+        };
+        
+        if (formData.magasin) {
+          updateData.magasin = formData.magasin;
+        }
+        
+        if (formData.image) {
+          updateData.image = formData.image;
+        }
+
+        await authService.updateUser(editingUser.id, updateData);
         toast.success('Utilisateur modifié avec succès');
       } else {
         // Création d'un nouvel utilisateur
@@ -85,7 +86,16 @@ export const UtilisateursPage: React.FC = () => {
           return;
         }
         
-        userData.append('password', formData.password);
+        const userData = {
+          email: formData.email,
+          nom: formData.nom,
+          prenom: formData.prenom,
+          password: formData.password,
+          role: formData.role,
+          magasin: formData.magasin || null,
+          image: formData.image
+        };
+
         await authService.createUser(userData);
         toast.success('Utilisateur créé avec succès');
       }
@@ -93,10 +103,11 @@ export const UtilisateursPage: React.FC = () => {
       resetForm();
       fetchUsers();
     } catch (error: any) {
-      if (error.message.includes('email')) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      if (error.message.includes('email') || error.message.includes('unique')) {
         toast.error('Cette adresse email est déjà utilisée');
       } else {
-        toast.error('Erreur lors de la sauvegarde');
+        toast.error(error.message || 'Erreur lors de la sauvegarde');
       }
     } finally {
       setLoading(false);
@@ -145,8 +156,8 @@ export const UtilisateursPage: React.FC = () => {
 
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.prenom.toLowerCase().includes(searchTerm.toLowerCase())
+    (user.nom && user.nom.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (user.prenom && user.prenom.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (loading && users.length === 0) {

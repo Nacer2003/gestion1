@@ -48,8 +48,8 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'email', 'nom', 'prenom', 'role', 'magasin_id', 'image', 'image_url', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = ['id', 'email', 'nom', 'prenom', 'role', 'magasin_id', 'image', 'image_url', 'date_joined']
+        read_only_fields = ['id', 'date_joined']
     
     def get_magasin_id(self, obj):
         return str(obj.magasin.id) if obj.magasin else None
