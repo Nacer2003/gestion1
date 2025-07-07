@@ -6,6 +6,9 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db import transaction
 from .models import Stock, Mouvement, Commande, CommandeDetail
 from .serializers import StockSerializer, MouvementSerializer, CommandeSerializer, CommandeDetailSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 class StockListCreateView(generics.ListCreateAPIView):
     queryset = Stock.objects.all()
@@ -14,6 +17,18 @@ class StockListCreateView(generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['produit', 'magasin']
     ordering = ['-updated_at']
+    
+    def create(self, request, *args, **kwargs):
+        try:
+            logger.info(f"Création de stock")
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            stock = serializer.save()
+            logger.info(f"Stock créé avec succès")
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Erreur lors de la création du stock: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class StockDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Stock.objects.all()

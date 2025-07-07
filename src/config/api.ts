@@ -54,6 +54,7 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
       ...options,
     };
 
+    console.log(`API Request: ${options.method || 'GET'} ${url}`, defaultOptions);
     const response = await fetch(url, defaultOptions);
     
     if (response.status === 401) {
@@ -96,7 +97,9 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
     
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return await response.json();
+      const data = await response.json();
+      console.log('API Response:', data);
+      return data;
     }
     
     return response;
